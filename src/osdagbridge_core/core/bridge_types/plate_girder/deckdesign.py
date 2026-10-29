@@ -637,6 +637,7 @@ def design_deck_slab(input_dict: dict, fck: float, fctm: float, fy: float, Es: f
     # Second pass — recheck with refined d to guard against d decreasing for larger bars
     As_req_bot2 = max(_required_steel_mm2(M_ULS_bot_kNm / _TIGHTEN_TARGET_UR, fy, d_bot_mm, fck),
                       _min_steel_mm2(fctm, fy, d_bot_mm))
+    As_req_bot = As_req_bot2
     if As_req_bot2 > As_bot:
         dia_bot, spc_bot, As_bot = _pick_rebar(As_req_bot2, allowed_dias)
         d_bot_mm = deck_t_mm - cover_bot_mm - dia_bot / 2.0
@@ -663,6 +664,7 @@ def design_deck_slab(input_dict: dict, fck: float, fctm: float, fy: float, Es: f
     d_top_mm = deck_t_mm - cover_top_mm - dia_top / 2.0
     As_req_top2 = max(_required_steel_mm2(M_ULS_top_kNm / _TIGHTEN_TARGET_UR, fy, d_top_mm, fck),
                       _min_steel_mm2(fctm, fy, d_top_mm), As_crack_min_top)
+    As_req_top = As_req_top2
     if As_req_top2 > As_top:
         dia_top, spc_top, As_top = _pick_rebar(As_req_top2, allowed_dias)
         d_top_mm = deck_t_mm - cover_top_mm - dia_top / 2.0
@@ -735,6 +737,7 @@ def design_deck_slab(input_dict: dict, fck: float, fctm: float, fy: float, Es: f
         # Second pass — recheck with refined d (larger bars reduce d below d_init)
         As_req_oh2 = max(_required_steel_mm2(M_ULS_oh / _TIGHTEN_TARGET_UR, fy, d_oh_mm, fck),
                          _min_steel_mm2(fctm, fy, d_oh_mm))
+        As_req_oh = As_req_oh2
         if As_req_oh2 > As_oh:
             dia_oh, spc_oh, As_oh = _pick_rebar(As_req_oh2, allowed_dias)
             d_oh_mm = deck_t_mm - cover_top_mm - dia_oh / 2.0
