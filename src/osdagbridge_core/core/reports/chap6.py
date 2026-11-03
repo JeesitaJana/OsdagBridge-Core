@@ -9,19 +9,19 @@ def ch6_drawings(fig_paths):
     Figure numbering (auto-incremented by LaTeX):
       6.1  Overall 3D Bridge Superstructure
       6.2  Typical Cross Section
-      6.3  Deck Reinforcement Layout
-      6.4  Top View
-      6.5  3D View of Plate Girders
-      6.6  Cross Section of Plate Girder
-      6.7  Side View of Girder
-      6.8  Cross Bracing Layout
-      6.9  Cross Bracing -- Bracing Section
-      6.10 Cross Bracing -- Top Chord Section
-      6.11 Cross Bracing -- Bottom Chord Section
-      6.12 End Diaphragm Layout
-      6.13 End Diaphragm -- Bracing Section
-      6.14 End Diaphragm -- Top Chord Section
-      6.15 End Diaphragm -- Bottom Chord Section
+      6.3  Top View
+      6.4  3D View of Plate Girders
+      6.5  Cross Section of Plate Girder
+      6.6  Side View of Girder
+      6.7  Cross Bracing Layout
+      6.8  Cross Bracing -- Bracing Section
+      6.9  Cross Bracing -- Top Chord Section
+      6.10 Cross Bracing -- Bottom Chord Section
+      6.11 End Diaphragm Layout
+      6.12 End Diaphragm -- Bracing Section
+      6.13 End Diaphragm -- Top Chord Section
+      6.14 End Diaphragm -- Bottom Chord Section
+      6.15 Deck Reinforcement Layout
     """
 
     def _sec_fig(path, title, label=None):
@@ -142,7 +142,6 @@ This section presents automatically generated bridge views and component schemat
 """
             + sup3d + '\n\n'
             + cs + '\n\n'
-            + deck_reinforcement + '\n\n'
             + gtop + r"""
 
 \section{Plate Girder --- Detailed Views}
@@ -166,6 +165,8 @@ This section presents automatically generated bridge views and component schemat
 
 """
             + eddia + '\n\n'
-            + ed_sections_row + r"""
+            + ed_sections_row + '\n\n'
+            + deck_reinforcement
+            + r"""
 
 """)
