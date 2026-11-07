@@ -286,8 +286,11 @@ _STEEL_E0       = 200 * GPa    # Initial elastic modulus (Pa)
 _STEEL_B        = 0.01         # Strain-hardening ratio
 _STEEL_FY_DEFAULT = 250 * MPa  # Fallback Fy if material not found in DB (Pa)
 
-
-def resolve_girder_value(source: dict, base_key: str, i: int | None = None, mi: int = 1): 
+from osdagbridge_core.core.bridge_types.plate_girder.results_data import (
+    build_load_effects_cache,
+    build_forces_summary,
+)
+def resolve_girder_value(source: dict, base_key: str, i: int | None = None):
     """
     Resolve a girder property from an input/output dict, tolerating both the
     per-girder dynamic key scheme and the legacy scalar key.
@@ -1148,7 +1151,9 @@ class PlateGirderBridge:
 
         report_inputs = self.input_dict.copy()
         output_dict   = dict(self.output_dict)  # MappingProxyType → dict
-
+        output_dict["build_vertical_support_reactions"] = getattr(
+            self, "_build_vertical_support_reactions", {}
+        )
         # ── Chapter 4: analysis summary for Tables ──────────────────
         lc_sum  = getattr(self, '_lc_summary',       None)
         rxn_sum = getattr(self, '_reaction_summary',  None)
@@ -2885,14 +2890,12 @@ class PlateGirderBridge:
         build_girders() labels the first/last members as EB1/EB2 when an
         overhang exists — allowing build_load_effects_cache() to skip them.
         """
-        from osdagbridge_core.core.bridge_types.plate_girder.results_data import (
-            build_load_effects_cache, build_forces_summary,
-        )
         results = self.get_results_dataset()
         if results is None:
             self._load_effects_cache        = {}
             self._lc_summary       = {}
             self._reaction_summary= {}
+            self._build_vertical_support_reactions = {}
             self.output_dict["load_effects_cache"] = {}
             return
         edge_dist = self.get_edge_dist()
@@ -2905,6 +2908,7 @@ class PlateGirderBridge:
         ch4 = build_forces_summary(rh, self._load_effects_cache)
         self._lc_summary       = ch4["load_cases"]
         self._reaction_summary= ch4["reactions"]
+        self._build_vertical_support_reactions = ch4["support_reactions"]
 
         # Persist the envelope cache so the strict output_dict-only resolvers
         # (bending/shear envelope + by-load-case results tables) can read it.

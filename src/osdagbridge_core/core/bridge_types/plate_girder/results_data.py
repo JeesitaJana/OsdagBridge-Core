@@ -924,7 +924,6 @@ def build_load_effects_cache(result_handler) -> dict:
                 }
     return cache
 
-
 def composite_stiffness_props(config) -> tuple[dict, float]:
     """Short-term composite section properties + the composite/steel stiffness ratio.
 
@@ -1162,14 +1161,22 @@ def build_forces_summary(result_handler, load_effects_cache: dict) -> dict:
 
     Returns
     -------
-    dict with two keys:
+    dict with three keys:
         "load_cases" : {lc_name: {max_bm, bm_girder, bm_location,
                                    max_sf, sf_girder, sf_location}}
         "reactions"  : {lc_name: {left_kN, right_kN}}
+        "support_reactions": {
+            lc_name: {
+                girder_label: {
+                    "left_kN": value,
+                    "right_kN": value,
+                }
+            }
+        }
     """
     ds = result_handler.ds
     if ds is None or not load_effects_cache:
-        return {"load_cases": {}, "reactions": {}}
+        return {"load_cases": {}, "reactions": {}, "support_reactions": {}}
 
     # Build girder map and node coords once — reused for both location and reactions
     g_map, _ = result_handler.build_girders(verbose=False)
@@ -1199,7 +1206,12 @@ def build_forces_summary(result_handler, load_effects_cache: dict) -> dict:
 
     lc_summary = {}
     rxn_summary = {}
-
+    support_reactions = {}
+    reaction_query = getattr(result_handler, "_get_reactions_df", None)
+    excluded_reaction_lcs = set(
+        classified.get("vehicle_static", [])
+        + classified.get("vehicle_moving", [])
+    )
     for lc in all_lcs:
         # ── 1. Derive max_bm / bm_girder and max_sf / sf_girder from cache ──
         global_bm, bm_girder = 0.0, "—"
@@ -1271,33 +1283,68 @@ def build_forces_summary(result_handler, load_effects_cache: dict) -> dict:
         }
 
         # ── 3. Reactions — sum Ra and Rb across all interior girders ──
-        left_total  = 0.0
+        left_total = 0.0
         right_total = 0.0
 
         for gmap_key in cache_label_to_gmap_key.values():
             element_map = g_map[gmap_key].get("element_map", [])
             if not element_map:
                 continue
+
             eid_start, n1_start, _ = element_map[0]
-            eid_end,   _,  n2_end  = element_map[-1]
+            eid_end, _, n2_end = element_map[-1]
+
             try:
                 ra = float(ds.sel(
                     Loadcase=lc, Element=eid_start, Component="Vy_i"
                 )["forces"]) / 1000.0
+
                 rb = -float(ds.sel(
                     Loadcase=lc, Element=eid_end, Component="Vy_j"
                 )["forces"]) / 1000.0
-                left_total  += ra
+
+                left_total += ra
                 right_total += rb
+
             except Exception:
                 pass
 
         rxn_summary[lc] = {
-            "left_kN":  round(left_total,  3),
+            "left_kN":  round(left_total, 3),
             "right_kN": round(right_total, 3),
         }
+        # ── 4. Individual vertical support reactions for Table 4.2 ──
+        if lc not in excluded_reaction_lcs and "moving" not in lc.lower():
+            reaction_rows = (
+                reaction_query(lc) if callable(reaction_query) else None
+            )
 
-    return {"load_cases": lc_summary, "reactions": rxn_summary}
+            reaction_by_girder = {}
+
+            if reaction_rows is not None and not reaction_rows.empty:
+                reaction_by_girder = {
+                    str(row["Girder"]): row
+                    for _, row in reaction_rows.iterrows()
+                }
+
+            support_reactions[lc] = {}
+
+            for girder_label, gmap_key in cache_label_to_gmap_key.items():
+                row = reaction_by_girder.get(gmap_key)
+
+                support_reactions[lc][girder_label] = {
+                    "left_kN": (
+                        float(row["Ra (kN)"]) if row is not None else None
+                    ),
+                    "right_kN": (
+                        float(row["Rb (kN)"]) if row is not None else None
+                    ),
+                }
+    return {
+        "load_cases": lc_summary,
+        "reactions": rxn_summary,
+        "support_reactions": support_reactions,
+    }
 
 
 def _dump(data: dict, filename: str = "bridge_plot_data.json") -> None:
