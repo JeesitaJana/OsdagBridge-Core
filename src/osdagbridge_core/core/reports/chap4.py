@@ -145,7 +145,12 @@ def ch4_analysis(asum, fig_paths, bridge: "ReportDataBridge"):
         [r"Allowable Total Deflection ($\Delta_{allow}$)", _allow_total_str],
         ["Total Load Deflection Check Status", _total_status],
     ]
-
+    # Embed the Plan View with A/B support markings before Table 4.2.
+    """ + _fig_embed(
+    fig_paths.get('girder_top_support_marked'),
+    'Plan View showing support locations A and B.',
+    width=r'0.85\textwidth'
+    ) + r"""
     # Table 4.2 rows — individual girder reactions, taken straight from the
     # per-girder summary.  The summary's aggregate fields remain available for
     # the existing Table 4.1 and other consumers.
@@ -214,6 +219,14 @@ def ch4_analysis(asum, fig_paths, bridge: "ReportDataBridge"):
 A grillage model was used for structural analysis. The deck is idealized as a grid of elastic beam elements --- longitudinal members represent the composite steel girders with effective slab, and transverse members represent the slab or cross frames. This section summarizes the critical output from that analysis.
 
 """ + render_analysis_demands_table(merged_body) + r"""
+
+\vspace{1em}
+\noindent
+""" + _fig_embed(
+    fig_paths.get('girder_top_support_marked'),
+    'Plan View showing support locations A and B.',
+    width=r'0.85\textwidth'
+) + r"""
 
 """ + render_report_table(
     "Vertical Support Reactions", [],
