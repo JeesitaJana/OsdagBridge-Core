@@ -457,9 +457,13 @@ def ch5_design_checks(checks_data, bridge, chart_paths=None, girder_details=None
         ]
         t56_groups.append((lbl, t56_items))
 
+
     # Generate Table 5.7 rows
     _is_custom = str(bridge.input_dict.get(KEY_DESIGN_MODE, "Optimized")).strip().lower() in {"custom", "customized"}
+
+    per_girder_design = design_results.get("per_girder", {}) or {}
     t57_groups = []
+
     for lbl, girder_output in iter_girder_outputs(bridge.output_dict, girder_entries):
         if _is_custom:
             for target, source in (
@@ -472,6 +476,18 @@ def ch5_design_checks(checks_data, bridge, chart_paths=None, girder_details=None
             ):
                 if source in girder_output:
                     girder_output.setdefault(target, girder_output[source])
+
+        else:
+            girder_name = girder_output["_report_girder"]
+            girder_results = per_girder_design.get(girder_name, {}) or {}
+
+            girder_output[KEY_SD_STIFF_INT_THICK] = (
+                girder_results.get("stiff_int_thick_req")
+            )
+            girder_output[KEY_SD_STIFF_END_THICK] = (
+                girder_results.get("stiff_end_thick_req")
+            )
+
         t57_items = [
             ["Shear Buckling Design Method", str(_render_value(girder_output, KEY_SD_STIFF_METHOD)).replace("_", " ").title()],
             ["Intermediate Stiffener Thickness (mm)", _render_value(girder_output, KEY_SD_STIFF_INT_THICK)],

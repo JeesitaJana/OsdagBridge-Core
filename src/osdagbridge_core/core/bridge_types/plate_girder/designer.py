@@ -3799,6 +3799,10 @@ def run_design_check(
             "category_urs": g_cat_urs,
             "per_lc": _compute_per_lc_dcr(g_config, g_lc),
             "sls_fibre_stresses": g_cap.details.get("sls_actual_stresses") or {},
+            "stiff_int_thick_req": g_cap.details.get(
+                "intermediate_stiffener", {}).get("tq_req_mm"),
+            "stiff_end_thick_req": g_cap.details.get(
+                "bearing_stiffener", {}).get("tq_req_bearing_mm"),
             "section": {
                 "D_mm"         : g_config.section.D,
                 "tw_mm"        : g_config.section.tw,
