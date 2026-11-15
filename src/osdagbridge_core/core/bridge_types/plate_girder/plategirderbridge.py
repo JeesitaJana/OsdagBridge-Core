@@ -290,7 +290,7 @@ from osdagbridge_core.core.bridge_types.plate_girder.results_data import (
     build_load_effects_cache,
     build_forces_summary,
 )
-def resolve_girder_value(source: dict, base_key: str, i: int | None = None):
+def resolve_girder_value(source: dict, base_key: str, i: int | None = None, mi: int = 1):
     """
     Resolve a girder property from an input/output dict, tolerating both the
     per-girder dynamic key scheme and the legacy scalar key.
