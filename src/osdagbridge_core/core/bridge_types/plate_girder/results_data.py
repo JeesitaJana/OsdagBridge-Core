@@ -924,6 +924,7 @@ def build_load_effects_cache(result_handler) -> dict:
                 }
     return cache
 
+
 def composite_stiffness_props(config) -> tuple[dict, float]:
     """Short-term composite section properties + the composite/steel stiffness ratio.
 
@@ -1283,34 +1284,29 @@ def build_forces_summary(result_handler, load_effects_cache: dict) -> dict:
         }
 
         # ── 3. Reactions — sum Ra and Rb across all interior girders ──
-        left_total = 0.0
+        left_total  = 0.0
         right_total = 0.0
 
         for gmap_key in cache_label_to_gmap_key.values():
             element_map = g_map[gmap_key].get("element_map", [])
             if not element_map:
                 continue
-
             eid_start, n1_start, _ = element_map[0]
-            eid_end, _, n2_end = element_map[-1]
-
+            eid_end,   _,  n2_end  = element_map[-1]
             try:
                 ra = float(ds.sel(
                     Loadcase=lc, Element=eid_start, Component="Vy_i"
                 )["forces"]) / 1000.0
-
                 rb = -float(ds.sel(
                     Loadcase=lc, Element=eid_end, Component="Vy_j"
                 )["forces"]) / 1000.0
-
-                left_total += ra
+                left_total  += ra
                 right_total += rb
-
             except Exception:
                 pass
 
         rxn_summary[lc] = {
-            "left_kN":  round(left_total, 3),
+            "left_kN":  round(left_total,  3),
             "right_kN": round(right_total, 3),
         }
         # ── 4. Individual vertical support reactions for Table 4.2 ──
